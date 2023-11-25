@@ -43,6 +43,7 @@ private:
 
 public:
 
+
 	void Init(const INT32 index)
 	{
 		mIndex = index;
@@ -96,12 +97,13 @@ public:
 		return USER_HP;
 	}
 
+
 	void Respawn()
 	{
 		USER_HP = 100;
 		USER_DEALING_DAMAGE = 5;
-		USER_POS.X = 5 * mIndex;
-		USER_POS.Z = 5 * mIndex;
+		USER_POS.X = 5.0f * mIndex;
+		USER_POS.Z = 5.0f * mIndex;
 	}
 
 	VECTOR3 GetUserPos()

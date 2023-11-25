@@ -5,6 +5,7 @@
 #include "UserManager.h"
 
 
+
 void PacketManager::Init(const UINT32 maxClient_)
 {
 	mUserManager = new UserManager;
@@ -271,10 +272,11 @@ void PacketManager::ProcessLoginDBResult(UINT32 clientIndex_, UINT16 packetSize_
 
 void PacketManager::ProcessObjectSpawn(UINT32 clientIndex_, UINT16 packetSize_, char* pPacket_)
 {
-	//일단 캐릭터랑 ID랑 같다고 합시다.
+	//일단 캐릭터랑 ID랑 같다고 가정.
 
 	if (packetSize_ != OBJECT_SPAWN_REQUEST_PACKET_LENGTH)
 	{
+		printf("[ERROR] OBJECT_SPAWN_REQUEST_PACKET_LENGTH DIFFERENT.\n");
 		return;
 	}
 
@@ -285,7 +287,7 @@ void PacketManager::ProcessObjectSpawn(UINT32 clientIndex_, UINT16 packetSize_, 
 
 	if (strcmp(pUserID, pUser->GetUserId().c_str()) != 0)
 	{
-		printf("[ERROR] SPAWN 하기 위한 ID가 다릅니다.");
+		printf("[ERROR] SPAWN 하기 위한 Character ID가 다릅니다.\n");
 		return;
 	}
 
@@ -293,7 +295,7 @@ void PacketManager::ProcessObjectSpawn(UINT32 clientIndex_, UINT16 packetSize_, 
 	OBJECT_SPAWN_BROADCAST_PACKET spawnbroadPacket;
 	spawnbroadPacket.PacketId = (UINT16)PACKET_ID::OBJECT_SPAWN_BROADCAST;
 	spawnbroadPacket.PacketLength = sizeof(OBJECT_SPAWN_BROADCAST_PACKET);
-	strcpy(spawnbroadPacket.CharacterID, pUserID);
+	strcpy_s(spawnbroadPacket.CharacterID, pUserID);
 	spawnbroadPacket.TARGET_HP = pUser->GetUserHP();
 	spawnbroadPacket.TARGET_POSITION = pUser->GetUserPos();
 	spawnbroadPacket.TARGET_ROTATION = pUser->GetUserRot();
@@ -306,10 +308,82 @@ void PacketManager::ProcessObjectSpawn(UINT32 clientIndex_, UINT16 packetSize_, 
 }
 void PacketManager::ProcessObjectMovement(UINT32 clientIndex_, UINT16 packetSize_, char* pPacket_)
 {
+	if (packetSize_ != OBJECT_MOVEMENT_REQUEST_PACKET_LENGTH)
+	{
+		printf("[ERROR] OBJECT_MOVEMENT_REQUEST_PACKET_LENGTH DIFFERENT.\n");
+		return;
+	}
+
+	auto pMovementPacket = reinterpret_cast<OBJECT_SPAWN_REQUEST_PACKET*>(pPacket_);
+	auto pUserID = pMovementPacket->CharacterID;
+
+	auto pUser = mUserManager->GetUserByConnIdx(clientIndex_);
+
+	if (strcmp(pUserID, pUser->GetUserId().c_str()) != 0)
+	{
+		printf("[ERROR] 움직이기 위한 Character ID가 다릅니다.\n");
+		return;
+	}
+
+	OBJECT_MOVEMENT_BROADCAST_PACKET movebroadPacket;
+	memcpy(&movebroadPacket, pMovementPacket,sizeof(OBJECT_SPAWN_REQUEST_PACKET));
+	movebroadPacket.PacketId = (UINT16)PACKET_ID::OBJECT_MOVEMENT_BROADCAST;
+	movebroadPacket.PacketLength = sizeof(OBJECT_MOVEMENT_BROADCAST_PACKET);
+
+	mUserManager->SendToAllUserExceptMe((char*)&movebroadPacket, (UINT16)sizeof(OBJECT_MOVEMENT_BROADCAST_PACKET), clientIndex_);
 
 }
 void PacketManager::ProcessObjectAttack(UINT32 clientIndex_, UINT16 packetSize_, char* pPacket_)
 {
+	if (packetSize_ != OBJECT_ATTACK_REQUEST_LENGTH)
+	{
+		printf("[ERROR] OBJECT_ATTACK_REQUEST_PACKET_LENGTH DIFFERENT.\n");
+		return;
+	}
+
+	auto pAttackPacket = reinterpret_cast<OBJECT_ATTACK_REQUEST_PACKET*>(pPacket_);
+	
+	auto pUserIDAttack = pAttackPacket->ATTACK_CHARACTER_ID;
+	auto pUserIDDamaged = pAttackPacket->DAMAGED_CHARACTER_ID;
+
+	auto pUser = mUserManager->GetUserByConnIdx(clientIndex_);
+
+
+	OBJECT_ATTACK_BROADCAST_PACKET attackbroadPacket;
+
+	memcpy(&attackbroadPacket, pAttackPacket, sizeof(OBJECT_ATTACK_REQUEST_PACKET));
+
+	attackbroadPacket.PacketId = (UINT16)PACKET_ID::OBJECT_ATTACK_BROADCAST;
+	attackbroadPacket.PacketLength = sizeof(OBJECT_ATTACK_BROADCAST_PACKET);
+//	attackbroadPacket.DAMAGED_HP
+	
+
+	if (strcmp(pUserIDAttack, pUser->GetUserId().c_str()) == 0)
+	{
+		// player가 monster attack
+
+		//pUser -> deal(monster* mon, pAttackPacket->DAMAGE)
+		//죽엇나 살았나 죽으면 lvlup 
+		//monster 상태 update 하고 broadcast 
+
+
+	}
+
+	else if (strcmp(pUserIDDamaged, pUser->GetUserId().c_str()) == 0)
+	{
+		//monster가 player attack
+	}
+	
+	else
+	{
+		printf("[ERROR] 공격하거나 받는 캐릭터 ID가 다릅니다.\n");
+		return;
+	}
+
+
+
+	mUserManager->SendToAllUserExceptMe((char*)&attackbroadPacket, (UINT16)sizeof(OBJECT_ATTACK_BROADCAST_PACKET), clientIndex_);
+
 
 }
 void PacketManager::ProcessObjectDamaged(UINT32 clientIndex_, UINT16 packetSize_, char* pPacket_)
