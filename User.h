@@ -103,7 +103,18 @@ public:
 		USER_HP = 100;
 		USER_DEALING_DAMAGE = 5;
 		USER_POS.X = 5.0f * mIndex;
+		USER_POS.Y = 2.0f;
 		USER_POS.Z = 5.0f * mIndex;
+	}
+
+	void SetUserPos(VECTOR3 vector3_)
+	{
+		USER_POS = vector3_;
+	}
+
+	void SetUserRot(VECTOR3 vector3_)
+	{
+		USER_ROT = vector3_;
 	}
 
 	VECTOR3 GetUserPos()

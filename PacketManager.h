@@ -8,12 +8,14 @@
 #include <thread>
 #include <mutex>
 #include "UserManager.h"
+#include "MonsterManager.h"
 
 class PacketManager
 {
 private:
 
 	UserManager* mUserManager;
+	MonsterManager* mMonsterManager;
 
 
 
@@ -58,6 +60,7 @@ public:
 	std::function<void(UINT32, UINT32, char*)> SendPacketFunc;
 
 	void PushSystemPacket(PacketInfo packet_);
+
 
 
 };

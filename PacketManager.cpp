@@ -12,6 +12,14 @@ void PacketManager::Init(const UINT32 maxClient_)
 	mUserManager->Init(maxClient_);
 	mUserManager->SendPacketFunc = SendPacketFunc;
 
+	mMonsterManager = new MonsterManager;
+
+	int MonsterNum = 10;
+	int X_pos_limit = 20;
+	int Z_pos_limit = 20;
+
+	mMonsterManager->Init(maxClient_, MonsterNum, X_pos_limit, Z_pos_limit);
+
 }
 
 
@@ -142,7 +150,7 @@ void PacketManager::ProcessRecvPacket(const UINT32 clientIndex_, const UINT16 pa
 
 	
 
-	switch (clientIndex_)
+	switch (packetId_)
 	{
 
 	case (int)PACKET_ID::USER_CONNECT:
@@ -155,17 +163,24 @@ void PacketManager::ProcessRecvPacket(const UINT32 clientIndex_, const UINT16 pa
 		ProcessLogin(clientIndex_, packetSize_, pPacket_);
 		break;
 	case (int)PACKET_ID::OBJECT_SPAWN_REQUEST:
-		// spawn
+		ProcessObjectSpawn(clientIndex_, packetSize_, pPacket_);
 		break;
 	case (int)PACKET_ID::OBJECT_MOVEMENT_REQUEST:
-		//movement
+		ProcessObjectMovement(clientIndex_, packetSize_, pPacket_);
 		break;
 	case (int)PACKET_ID::OBJECT_ATTACK_REQUEST:
-		//ATTACK
+		ProcessObjectAttack(clientIndex_, packetSize_, pPacket_);
+		break;
+	case (int)PACKET_ID::MONSTER_AGGRO_REQUEST:
+		break;
+	case (int)PACKET_ID::MONSTER_MOVEMENT_REQUEST:
 		break;
 
+
+
+
 	default:
-		printf("[WRONG PACKET ID] packedid: %d\n", clientIndex_);
+		printf("[WRONG PACKET ID] packedid: %d\n", packetId_);
 
 	}
 	
@@ -298,13 +313,53 @@ void PacketManager::ProcessObjectSpawn(UINT32 clientIndex_, UINT16 packetSize_, 
 	strcpy_s(spawnbroadPacket.CharacterID, pUserID);
 	spawnbroadPacket.TARGET_HP = pUser->GetUserHP();
 	spawnbroadPacket.TARGET_POSITION = pUser->GetUserPos();
-	spawnbroadPacket.TARGET_ROTATION = pUser->GetUserRot();
+	//spawnbroadPacket.TARGET_ROTATION = pUser->GetUserRot();
 
 	// broadcast 합시다.
 
 	mUserManager->SendToAllUser((char*)&spawnbroadPacket, (UINT16)sizeof(OBJECT_SPAWN_BROADCAST_PACKET));
 
+	for (int i = 0; i < mMonsterManager->GetMaxMonsterCnt(); i++)
+	{
+		Monster* monster = mMonsterManager->GetMonsterPool()[i];
+		/*
+		SendPacketFunc(SendPacketFunc(clientIndex_, sizeof(LOGIN_RESPONSE_PACKET), (char*)&loginResPacket));
+			monster 상태 전송
+			aggro 중이면 monster aggro도 전송
+		*/
 
+		if (monster->GetMonsterState() == Monster::Monster_State::Live)
+		{
+			MONSTER_SPAWN_BROADCAST_PACKET monster_spawn_broad_pak;
+			strcpy_s(monster_spawn_broad_pak.MonsterID, monster->GetMonsterID().c_str());
+			monster_spawn_broad_pak.PacketId = (UINT16)PACKET_ID::MONSTER_SPAWN_BROADCAST;
+			monster_spawn_broad_pak.PacketLength = (UINT16)sizeof(MONSTER_SPAWN_BROADCAST_PACKET);
+			monster_spawn_broad_pak.TARGET_HP = monster->GetMonsterHP();
+			monster_spawn_broad_pak.TARGET_POSITION = monster->GetMonsterPos();
+
+			if (monster->GetAggroConnUserID().empty())
+			{
+				SendPacketFunc(clientIndex_, sizeof(MONSTER_SPAWN_BROADCAST_PACKET), (char*)&monster_spawn_broad_pak);
+			}
+
+			else
+			{
+				MONSTER_SPAWN_AGGRO_BROADCAST_PACKET monster_spawn_aggro_broad_pak;
+				memcpy(&monster_spawn_aggro_broad_pak, &monster_spawn_broad_pak, sizeof(MONSTER_SPAWN_BROADCAST_PACKET));
+				strcpy_s(monster_spawn_aggro_broad_pak.CharacterID, monster->GetAggroConnUserID().c_str());
+				SendPacketFunc(clientIndex_, sizeof(MONSTER_SPAWN_AGGRO_BROADCAST_PACKET), (char*)&monster_spawn_aggro_broad_pak);
+			}
+
+		}
+
+		else
+		{
+			continue;
+		}
+
+	
+
+	}
 }
 void PacketManager::ProcessObjectMovement(UINT32 clientIndex_, UINT16 packetSize_, char* pPacket_)
 {
@@ -314,7 +369,7 @@ void PacketManager::ProcessObjectMovement(UINT32 clientIndex_, UINT16 packetSize
 		return;
 	}
 
-	auto pMovementPacket = reinterpret_cast<OBJECT_SPAWN_REQUEST_PACKET*>(pPacket_);
+	auto pMovementPacket = reinterpret_cast<OBJECT_MOVEMENT_REQUEST_PACKET*>(pPacket_);
 	auto pUserID = pMovementPacket->CharacterID;
 
 	auto pUser = mUserManager->GetUserByConnIdx(clientIndex_);
@@ -326,9 +381,15 @@ void PacketManager::ProcessObjectMovement(UINT32 clientIndex_, UINT16 packetSize
 	}
 
 	OBJECT_MOVEMENT_BROADCAST_PACKET movebroadPacket;
-	memcpy(&movebroadPacket, pMovementPacket,sizeof(OBJECT_SPAWN_REQUEST_PACKET));
+
+	
+
+	memcpy(&movebroadPacket, pMovementPacket,sizeof(OBJECT_MOVEMENT_REQUEST_PACKET));
 	movebroadPacket.PacketId = (UINT16)PACKET_ID::OBJECT_MOVEMENT_BROADCAST;
 	movebroadPacket.PacketLength = sizeof(OBJECT_MOVEMENT_BROADCAST_PACKET);
+
+	pUser->SetUserPos(movebroadPacket.TARGET_POSITION);
+	pUser->SetUserRot(movebroadPacket.TARGET_ROTATION);
 
 	mUserManager->SendToAllUserExceptMe((char*)&movebroadPacket, (UINT16)sizeof(OBJECT_MOVEMENT_BROADCAST_PACKET), clientIndex_);
 

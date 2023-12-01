@@ -34,12 +34,18 @@
     <ClInclude Include="ErrorCode.h">
       <Filter>리소스 파일</Filter>
     </ClInclude>
+    <ClInclude Include="Monster.h">
+      <Filter>리소스 파일</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
       <Filter>리소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="PacketManager.cpp">
+      <Filter>리소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="MonsterManager.cpp">
       <Filter>리소스 파일</Filter>
     </ClCompile>
   </ItemGroup>
