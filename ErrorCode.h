@@ -9,5 +9,7 @@ enum class ERROR_CODE : unsigned short
 	LOGIN_USER_INVALID_PW = 33,
 
 	Monster_ALREADY_ASSIGEND = 51,
+	Monster_ALREADY_DEAD = 52,
+
 
 };

@@ -3,6 +3,7 @@
 
 #include "ErrorCode.h"
 #include "User.h"
+#include "MonsterManager.h"
 
 class UserManager
 {
@@ -21,6 +22,11 @@ public:
 	~UserManager() = default;
 
 	std::function<void(UINT32, UINT32, char*)> SendPacketFunc;
+
+	std::vector<User*> GetUserPool()
+	{
+		return mUserObjPool;
+	}
 
 	void Init(const INT32 maxUserCount_)
 	{
@@ -54,7 +60,7 @@ public:
 
 	ERROR_CODE AddUser(char* userID_, char* userPW_, int clientIndex_)
 	{
-		//TODO 최흥배 유저 중복 조사하기
+		
 
 		int user_idx = clientIndex_;
 
@@ -127,7 +133,7 @@ public:
 
 	}
 
-	//유저떠났을때 몬스터 어그로초기화
+
 
 
 

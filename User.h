@@ -5,12 +5,12 @@
 
 class User
 {
-	const UINT32 PACKET_DATA_BUFFER_SIZE = 8096;
+	const UINT32 PACKET_DATA_BUFFER_SIZE = 50000;
 
 	//체력
 	//좌표 각도와 - 위치, motion for animation 
 	//공격
- 
+
 
 
 public:
@@ -40,6 +40,8 @@ private:
 	VECTOR3 USER_POS = { 0, };
 	VECTOR3 USER_ROT = { 0, };
 
+	WEAPON USER_WEAPON=WEAPON::nothing;
+
 
 public:
 
@@ -53,6 +55,7 @@ public:
 		INT32 USER_DEALING_DAMAGE = 0;
 		USER_POS = { 0, };
 		USER_ROT = { 0, };
+		USER_WEAPON = WEAPON::nothing;
 
 
 
@@ -63,7 +66,7 @@ public:
 		mUserID = "";
 		mIsConfirm = false;
 		mCurDomainState = DOMAIN_STATE::NONE;
-	
+
 		mPakcetDataBufferWPos = 0;
 		mPakcetDataBufferRPos = 0;
 
@@ -72,19 +75,26 @@ public:
 		USER_POS = { 0, };
 		USER_ROT = { 0, };
 
+		USER_WEAPON = WEAPON::nothing;
+
 	}
 
 	int SetLogin(char* userID_)
 	{
 		mCurDomainState = DOMAIN_STATE::LOGIN;
 		mUserID = userID_;
-	
+
 		return 0;
 	}
 
-	void SetDomainState(DOMAIN_STATE value_) 
-	{ 
-		mCurDomainState = value_; 
+	void SetHP(INT32 UserHP_)
+	{
+		USER_HP = UserHP_;
+	}
+
+	void SetDomainState(DOMAIN_STATE value_)
+	{
+		mCurDomainState = value_;
 	}
 
 	INT32 GetNetConnIdx()
@@ -97,14 +107,27 @@ public:
 		return USER_HP;
 	}
 
+	WEAPON GetUserWeapon()
+	{
+		return USER_WEAPON;
+	}
+
+	void SetUserWeapon(WEAPON weapon_)
+	{
+		USER_WEAPON = weapon_;
+	}
+
+
+
 
 	void Respawn()
 	{
-		USER_HP = 100;
-		USER_DEALING_DAMAGE = 5;
+		USER_HP = 30;
+		USER_DEALING_DAMAGE = 3;
 		USER_POS.X = 5.0f * mIndex;
 		USER_POS.Y = 2.0f;
 		USER_POS.Z = 5.0f * mIndex;
+		USER_WEAPON = WEAPON::Unarmed;
 	}
 
 	void SetUserPos(VECTOR3 vector3_)

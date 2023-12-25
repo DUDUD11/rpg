@@ -31,7 +31,7 @@ private:
 	void ClearConnectionInfo(INT32 clientIndex_);
 
 	void EnqueuePacketData(const UINT32 clientIndex_);
-	
+
 	PacketInfo DequePacketData();
 	PacketInfo DequeSystemPacketData();
 
@@ -46,12 +46,19 @@ private:
 	void ProcessObjectSpawn(UINT32 clientIndex_, UINT16 packetSize_, char* pPacket_);
 	void ProcessObjectMovement(UINT32 clientIndex_, UINT16 packetSize_, char* pPacket_);
 	void ProcessObjectAttack(UINT32 clientIndex_, UINT16 packetSize_, char* pPacket_);
-	void ProcessObjectDamaged(UINT32 clientIndex_, UINT16 packetSize_, char* pPacket_);
+	void ProcessObjectWeapon(UINT32 clientIndex_, UINT16 packetSize_, char* pPacket_);
+
+	void ProcessMonsterAggro(UINT32 clientIndex_, UINT16 packetSize_, char* pPacket_);
+	void ProcessMonsterMovement(UINT32 clientIndex_, UINT16 packetSize_, char* pPacket_);
+	void ProcessMonsterAggroReset(UINT32 clientIndex_, UINT16 packetSize_, char* pPacket_);
+	void PatrolWithoutAggroPositionSync(MonsterManager* MonsterPool_, UserManager* UserPool_);
+	void PatrolWithoutAggroPositionSynceExcept(MonsterManager* MonsterPool_, UserManager* UserPool_, UINT32 clientIndex_);
+
 
 
 public:
 
-	void Init(const UINT32 maxClient_);
+	void Init(const UINT32 maxClient_, const UINT32 MonsterNum);
 	bool Run();
 
 	void End();
@@ -61,7 +68,10 @@ public:
 
 	void PushSystemPacket(PacketInfo packet_);
 
+	
+
+	float Distance_User_Monster(const VECTOR3 user_, const VECTOR3 monster_);
+
 
 
 };
-

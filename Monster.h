@@ -29,9 +29,10 @@ private:
 	//bool mIsConfirm = false;
 
 	Monster_State mCurMonsterState = Monster_State::None;
+	MONSTER_TYPE mMonsterType = MONSTER_TYPE::NONE;
 
-	INT16 Monster_Lv = 0;
-	INT32 Monster_HP = 10;
+	UINT16 Monster_Lv=0;
+	INT32 Monster_HP=0;
 	INT32 Monster_DAMAGE = 5;
 	VECTOR3 Monster_Spawn_Point = { 0, };
 	VECTOR3 Monster_POS = { 0, };
@@ -59,12 +60,16 @@ public:
 
 	}
 
-	void Init_Spawn(const VECTOR3 vector3, const INT32 Lv, std::string monsterID)
+	void Init_Spawn(const VECTOR3 vector3, const INT32 Lv, std::string monsterID, MONSTER_TYPE monstertype_)
 	{
-		VECTOR3 Monster_Spawn_Point = vector3;
+		Monster_Spawn_Point = vector3;
+		//printf("%f %f %f\n", Monster_Spawn_Point.X, Monster_Spawn_Point.Y, Monster_Spawn_Point.Z);
+		Monster_HP = 100;
+		Monster_POS = vector3;
 		Init_monster_lvl(Lv);
 		mCurMonsterState = Monster_State::Live;
 		SetMonsterID(monsterID);
+		SetMonType(monstertype_);
 	}
 
 	ERROR_CODE SetAggro_By_Player(const INT32 mUserIndex, char* UserID)
@@ -83,10 +88,11 @@ public:
 	}
 
 
-	void Respawn(const VECTOR3 vector3, const INT32 Lv, std::string monsterID)
+	void Respawn(const VECTOR3 vector3, const INT32 Lv, std::string monsterID, MONSTER_TYPE monstertype_)
 	{
 		Clear();
-		Init_Spawn(vector3, Lv, monsterID);
+		Init_Spawn(vector3, Lv, monsterID, monstertype_);
+		//printf("%f %f %f\n", vector3.X, vector3.Y, vector3.Z );
 	}
 
 	std::string GetMonsterID()
@@ -99,26 +105,42 @@ public:
 		mMonsterID = mMonsterName;
 	}
 
+	void Disattract()
+	{
+		mIndex = -1;
+		mUserID = "";
+	}
+
+	UINT16 GetMonsterLv()
+	{
+		return Monster_Lv;
+	
+	}
+
 
 	void Clear()
 	{
 
-		INT32 mIndex = -1;
+		mIndex = -1;
 
 		mUserID = "";
 		mMonsterID = "";
 	//	mIsConfirm = false;
 		mCurMonsterState = Monster_State::None;
-
+		mMonsterType = MONSTER_TYPE::NONE;
 		
-		INT16 Monster_Lv = 0;
-		INT32 Monster_HP = 10;
-		INT32 Monster_DAMAGE = 5;
-		VECTOR3 Monster_Spawn_Point = { 0, };
-		VECTOR3 Monster_POS = { 0, };
-		VECTOR3 Monster_ROT = { 0, };
+		Monster_Lv = 0;
+		Monster_HP = 0;
+		Monster_DAMAGE = 5;
+		Monster_Spawn_Point = { 0, };
+		Monster_POS = { 0, };
+		Monster_ROT = { 0, };
 	}
 
+	VECTOR3 GetMonsterSpawnPoint()
+	{
+		return Monster_Spawn_Point;
+	}
 
 	void SetMonsterState(Monster_State value_)
 	{
@@ -140,10 +162,9 @@ public:
 		return mUserID;
 	}
 
-	INT32 SetMonsterHP(UINT32 DAMAGE)
+	void SetMonsterHP(UINT32 HP_)
 	{
-		Monster_HP -= DAMAGE;
-		return Monster_HP;
+		Monster_HP = HP_;
 	}
 
 	INT32 GetMonsterHP()
@@ -161,6 +182,15 @@ public:
 		return Monster_ROT;
 	}
 
+	void SetMonType(MONSTER_TYPE monster_type_)
+	{
+		mMonsterType = monster_type_;
+	}
+
+	MONSTER_TYPE GetMonType()
+	{
+		return mMonsterType;
+	}
 	
 
 	void SetMonPos(VECTOR3 vector3_)

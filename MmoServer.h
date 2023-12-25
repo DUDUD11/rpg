@@ -29,12 +29,12 @@ public:
 
 	virtual void OnReceive(const UINT32 clientIndex_, const UINT32 size_, char* pData_) override
 	{
-		printf("[OnReceive] 클라이언트: Index(%d), dataSize(%d)\n", clientIndex_, size_);
-
+		if(size_ != 44 && size_ != 46) printf("[OnReceive] 클라이언트: Index(%d), dataSize(%d)\n", clientIndex_, size_);
+		
 		m_PacketManager->ReceivePacketData(clientIndex_, size_, pData_);
 	}
 
-	void Run(const UINT32 maxClient)
+	void Run(const UINT32 maxClient, const UINT32 MonsterNum)
 	{
 		auto sendPacketFunc = [&](UINT32 clientIndex_, UINT16 packetSize, char* pSendPacket)
 		{
@@ -43,7 +43,7 @@ public:
 
 		m_PacketManager = std::make_unique<PacketManager>();
 		m_PacketManager->SendPacketFunc = sendPacketFunc;
-		m_PacketManager->Init(maxClient);
+		m_PacketManager->Init(maxClient, MonsterNum);
 		m_PacketManager->Run();
 
 		StartServer(maxClient);
