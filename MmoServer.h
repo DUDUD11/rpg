@@ -29,7 +29,7 @@ public:
 
 	virtual void OnReceive(const UINT32 clientIndex_, const UINT32 size_, char* pData_) override
 	{
-		if(size_ != 44 && size_ != 46) printf("[OnReceive] 클라이언트: Index(%d), dataSize(%d)\n", clientIndex_, size_);
+	//	if(size_ != 44 && size_ != 46) printf("[OnReceive] 클라이언트: Index(%d), dataSize(%d)\n", clientIndex_, size_);
 		
 		m_PacketManager->ReceivePacketData(clientIndex_, size_, pData_);
 	}

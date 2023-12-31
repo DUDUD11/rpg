@@ -4,8 +4,8 @@
 #include <Ws2tcpip.h>
 #include <mswsock.h>
 
-const UINT32 MAX_SOCK_RECVBUF = 50000;	// 소켓 버퍼의 크기
-const UINT32 MAX_SOCK_SENDBUF = 50000;	// 소켓 버퍼의 크기
+const UINT32 MAX_SOCK_RECVBUF = 65535;	// 소켓 버퍼의 크기
+const UINT32 MAX_SOCK_SENDBUF = 65535;	// 소켓 버퍼의 크기
 const UINT64 RE_USE_SESSION_WAIT_TIMESEC = 3;
 
 

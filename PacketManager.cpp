@@ -53,6 +53,8 @@ void PacketManager::PushSystemPacket(PacketInfo packet_)
 	mSystemPacketQueue.push_back(packet_);
 }
 
+
+
 float Distance_User_Monster(const VECTOR3 user_, const VECTOR3 monster_)
 {
 	return (user_.X - monster_.X) * (user_.X - monster_.X) + (user_.Y - monster_.Y) * (user_.Y - monster_.Y) + (user_.Z - monster_.Z) * (user_.Z - monster_.Z);
@@ -154,6 +156,40 @@ void PacketManager::ProcessPacket()
 
 }
 
+void PacketManager::ProcessPatrol(UINT32 clientIndex_, UINT16 packetSize_, char* pPacket_)
+{ 
+	if (packetSize_ != USER_PATROL_AI_RESPONSE_PACKET_LENGTH)
+	{
+		printf("[ERROR] USER_PATROL_AI_RESPONSE_PACKET_LENGTH DIFFERENT.\n");
+		return;
+	}
+
+	auto pPatrolPacket = reinterpret_cast<USER_PATROL_AI_RESPONSE*>(pPacket_);
+	auto pMonsterID = pPatrolPacket->MonsterID;
+
+	auto pMonster = mMonsterManager->FindMonsterIndexByMonsterID(pMonsterID);
+
+	if (pMonster == mMonsterManager->NullPointermonster)
+	{
+		printf("[ERROR] Patrol 몬스터가 없습니다.\n");
+		return;
+	}
+
+	if (pMonster->GetMonType() != MONSTER_TYPE::GOLEM)
+	{
+		printf("[ERROR] Patrol 몬스터의 타입이 아닙니다.\n");
+		return;
+	}
+
+	pMonster->SetMonPos(pPatrolPacket->TARGET_POSITION);
+	pMonster->SetMonRot(pPatrolPacket->TARGET_ROTATION);
+	pMonster->SetWayPoint(pPatrolPacket->WAYPOINT);
+
+
+
+	
+}
+
 void PacketManager::ProcessRecvPacket(const UINT32 clientIndex_, const UINT16 packetId_, const UINT16 packetSize_, char* pPacket_)
 {
 
@@ -171,6 +207,10 @@ void PacketManager::ProcessRecvPacket(const UINT32 clientIndex_, const UINT16 pa
 	case (int)PACKET_ID::LOGIN_REQUEST:
 		ProcessLogin(clientIndex_, packetSize_, pPacket_);
 		break;
+	case (int)PACKET_ID::USER_PATROL_AI_RESPONSE:
+		ProcessPatrol(clientIndex_, packetSize_, pPacket_);
+		break;
+
 	case (int)PACKET_ID::OBJECT_SPAWN_REQUEST:
 		ProcessObjectSpawn(clientIndex_, packetSize_, pPacket_);
 		break;
@@ -222,7 +262,7 @@ void PacketManager::ProcessUserDisConnect(UINT32 clientIndex_, UINT16 packetSize
 	printf("[ProcessUserDisConnect] clientIndex: %d\n", clientIndex_);
 	ClearConnectionInfo(clientIndex_);
 
-	PatrolWithoutAggroPositionSynceExcept(mMonsterManager, mUserManager, clientIndex_);
+	PatrolWithoutAggroPositionSyncExcept(mMonsterManager, mUserManager, clientIndex_);
 
 }
 
@@ -233,7 +273,7 @@ void PacketManager::ProcessLogin(UINT32 clientIndex_, UINT16 packetSize_, char* 
 		return;
 	}
 
-	PatrolWithoutAggroPositionSynceExcept(mMonsterManager, mUserManager, clientIndex_);
+
 
 	auto pLoginReqPacket = reinterpret_cast<LOGIN_REQUEST_PACKET*>(pPacket_);
 
@@ -285,6 +325,8 @@ void PacketManager::ProcessLogin(UINT32 clientIndex_, UINT16 packetSize_, char* 
 
 		return;
 	}
+
+
 }
 
 
@@ -319,7 +361,7 @@ float PacketManager::Distance_User_Monster(const VECTOR3 user_, const VECTOR3 mo
 void PacketManager::PatrolWithoutAggroPositionSync(MonsterManager* MonsterPool_, UserManager* UserPool_)
 {
 
-	if (UserPool_->GetCurrentUserCnt() == 0) return;
+	//if (UserPool_->GetCurrentUserCnt() == 0) return;
 
 	for (int i = 0; i < MonsterPool_->GetMaxMonsterCnt(); i++)
 	{
@@ -331,6 +373,8 @@ void PacketManager::PatrolWithoutAggroPositionSync(MonsterManager* MonsterPool_,
 
 			double distance = -1;
 			int closest_user = -1;
+
+
 
 			for (int j = 0; j < UserPool_->GetMaxUserCnt(); j++)
 			{
@@ -353,6 +397,8 @@ void PacketManager::PatrolWithoutAggroPositionSync(MonsterManager* MonsterPool_,
 
 					}
 
+				
+
 				}
 			}
 
@@ -368,7 +414,7 @@ void PacketManager::PatrolWithoutAggroPositionSync(MonsterManager* MonsterPool_,
 
 				SendPacketFunc(closest_user, sizeof(USER_PATROL_AI), (char*)&user_patrol_ai);
 
-				printf("ai sync %d player\n",i);
+			
 		
 
 			}
@@ -390,10 +436,11 @@ void PacketManager::PatrolWithoutAggroPositionSync(MonsterManager* MonsterPool_,
 
 }
 
-void PacketManager::PatrolWithoutAggroPositionSynceExcept(MonsterManager* MonsterPool_, UserManager* UserPool_,UINT32 clientindex_)
+void PacketManager::PatrolWithoutAggroPositionSyncExcept(MonsterManager* MonsterPool_, UserManager* UserPool_,UINT32 clientindex_)
 {
 
-	if (UserPool_->GetCurrentUserCnt() == 0) return;
+
+//	if (UserPool_->GetCurrentUserCnt() == 0) return;
 
 	for (int i = 0; i < MonsterPool_->GetMaxMonsterCnt(); i++)
 	{
@@ -545,6 +592,7 @@ void PacketManager::ProcessObjectSpawn(UINT32 clientIndex_, UINT16 packetSize_, 
 			monster_spawn_broad_pak.TARGET_TYPE = monster->GetMonType();
 			monster_spawn_broad_pak.TARGET_POSITION = monster->GetMonsterPos();
 			monster_spawn_broad_pak.TARGET_SPAWNPOINT = monster->GetMonsterSpawnPoint();
+			monster_spawn_broad_pak.WAYPOINT = monster->GetWayPoint();
 
 			if (monster->GetAggroConnUserID().empty())
 			{
@@ -570,7 +618,17 @@ void PacketManager::ProcessObjectSpawn(UINT32 clientIndex_, UINT16 packetSize_, 
 
 	}
 
+	// patrol monster aggro 선정
 
+	if (mUserManager->GetCurrentUserCnt() == 1)
+	{
+		PatrolWithoutAggroPositionSync(mMonsterManager, mUserManager);
+	}
+
+	else
+	{
+		PatrolWithoutAggroPositionSyncExcept(mMonsterManager, mUserManager, clientIndex_);
+	}
 
 
 }
@@ -861,7 +919,7 @@ void PacketManager::ProcessMonsterAggroReset(UINT32 clientIndex_, UINT16 packetS
 	pMonsterAggroResetbroadcastPacket.PacketLength = sizeof(MONSTER_AGGRO_RESET_BROADCAST_PACKET);
 	mUserManager->SendToAllUserExceptMe((char*)&pMonsterAggroResetbroadcastPacket, sizeof(MONSTER_AGGRO_RESET_BROADCAST_PACKET), clientIndex_);
 
-	printf("몬스터 어그로 초기화\n");
+//	printf("몬스터 어그로 초기화\n");
 
 	PatrolWithoutAggroPositionSync(mMonsterManager, mUserManager); // 패트롤 설정.
 

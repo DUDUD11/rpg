@@ -42,6 +42,7 @@ private:
 
 	void ProcessLogin(UINT32 clientIndex_, UINT16 packetSize_, char* pPacket_);
 	//void ProcessLoginDBResult(UINT32 clientIndex_, UINT16 packetSize_, char* pPacket_);
+	void ProcessPatrol(UINT32 clientIndex_, UINT16 packetSize_, char* pPacket_);
 
 	void ProcessObjectSpawn(UINT32 clientIndex_, UINT16 packetSize_, char* pPacket_);
 	void ProcessObjectMovement(UINT32 clientIndex_, UINT16 packetSize_, char* pPacket_);
@@ -52,7 +53,7 @@ private:
 	void ProcessMonsterMovement(UINT32 clientIndex_, UINT16 packetSize_, char* pPacket_);
 	void ProcessMonsterAggroReset(UINT32 clientIndex_, UINT16 packetSize_, char* pPacket_);
 	void PatrolWithoutAggroPositionSync(MonsterManager* MonsterPool_, UserManager* UserPool_);
-	void PatrolWithoutAggroPositionSynceExcept(MonsterManager* MonsterPool_, UserManager* UserPool_, UINT32 clientIndex_);
+	void PatrolWithoutAggroPositionSyncExcept(MonsterManager* MonsterPool_, UserManager* UserPool_, UINT32 clientIndex_);
 
 
 

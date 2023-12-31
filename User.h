@@ -5,7 +5,7 @@
 
 class User
 {
-	const UINT32 PACKET_DATA_BUFFER_SIZE = 50000;
+	const UINT32 PACKET_DATA_BUFFER_SIZE = 65535;
 
 	//체력
 	//좌표 각도와 - 위치, motion for animation 
@@ -41,6 +41,7 @@ private:
 	VECTOR3 USER_ROT = { 0, };
 
 	WEAPON USER_WEAPON=WEAPON::nothing;
+
 
 
 public:
@@ -91,6 +92,8 @@ public:
 	{
 		USER_HP = UserHP_;
 	}
+
+
 
 	void SetDomainState(DOMAIN_STATE value_)
 	{
@@ -164,6 +167,10 @@ public:
 	//TODO SetPacketData, GetPacket 함수를 멀티스레드에 호출하고 있다면 공유변수에 lock을 걸어야 한다
 	void SetPacketData(const UINT32 dataSize_, char* pData_)
 	{
+		//오류수정
+
+	
+
 		if ((mPakcetDataBufferWPos + dataSize_) >= PACKET_DATA_BUFFER_SIZE)
 		{
 			auto remainDataSize = mPakcetDataBufferWPos - mPakcetDataBufferRPos;
@@ -199,7 +206,6 @@ public:
 		}
 
 		auto pHeader = (PACKET_HEADER*)&mPacketDataBuffer[mPakcetDataBufferRPos];
-
 		if (pHeader->PacketLength > remainByte)
 		{
 			return PacketInfo();

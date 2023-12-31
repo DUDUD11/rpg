@@ -38,6 +38,7 @@ private:
 	VECTOR3 Monster_POS = { 0, };
 	VECTOR3 Monster_ROT = { 0, };
 	UINT64 mLatestDeadTimeSec = 0;
+	UINT16 Monster_WayPoint = 0;
 
 
 public:
@@ -135,6 +136,8 @@ public:
 		Monster_Spawn_Point = { 0, };
 		Monster_POS = { 0, };
 		Monster_ROT = { 0, };
+
+		Monster_WayPoint = 0;
 	}
 
 	VECTOR3 GetMonsterSpawnPoint()
@@ -145,6 +148,16 @@ public:
 	void SetMonsterState(Monster_State value_)
 	{
 		mCurMonsterState= value_;
+	}
+
+	void SetWayPoint(UINT16 Waypoint_)
+	{
+		Monster_WayPoint = Waypoint_;
+	}
+
+	UINT16 GetWayPoint()
+	{
+		return Monster_WayPoint;
 	}
 
 	Monster_State GetMonsterState()
